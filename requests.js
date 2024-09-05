@@ -215,8 +215,8 @@ router.post('/new-category', async (req, res) => {
 
 router.post('/:category/new-item', async (req, res) => {
     try {
-        const { title, description, imgLink, price } = req.body;
-        if (!title) {
+        const body = req.body;
+        if (!body.title) {
             res.status(404).json({
                 error: 'New item\'s title not found',
             })
@@ -230,7 +230,7 @@ router.post('/:category/new-item', async (req, res) => {
             })
         }
 
-        const newItem = await createItem(title, description, imgLink, price);
+        const newItem = await createItem(body);
         category.contents.push(newItem._id);
         await category.save();
 
@@ -287,7 +287,7 @@ router.post('/:category/new-subcategory', async (req, res) => {
 
 router.post('/:category/:subcategory/new-item', async (req, res) => {
     try {
-        const { title, description, imgLink, price } = req.body;
+        const body = req.body;
 
         const categoryTitle = await model.BilingualText.findOne({ eng: req.params.category.split('-').join(' ') });
         if (!categoryTitle) {
@@ -318,7 +318,7 @@ router.post('/:category/:subcategory/new-item', async (req, res) => {
             })
         }
 
-        const newItem = await createItem(title, description, imgLink, price);
+        const newItem = await createItem(body);
 
         subcategory.contents.push(newItem._id);
         await subcategory.save();

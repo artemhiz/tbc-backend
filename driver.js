@@ -1,26 +1,26 @@
 const model = require('./menu/menu-model');
 
-module.exports.createItem = async (title, description, imgLink, price) => {
+module.exports.createItem = async (item) => {
     const newItemTitle = await model.BilingualText.create({
-        eng: title.eng,
-        tr: title.tr,
+        eng: item.title.eng,
+        tr: item.title.tr,
     })
     let finalObject = { title: newItemTitle._id };
 
-    if (imgLink) {
-        finalObject = { ...finalObject, imgLink };
+    if (item.imgLink) {
+        finalObject = { ...finalObject, imgLink: item.imgLink };
     }
 
-    if (description) {
+    if (item.description) {
         const newItemDescription = await model.BilingualText.create({
-            eng: description.eng,
-            tr: description.tr,
+            eng: item.description.eng,
+            tr: item.description.tr,
         })
         finalObject = { ...finalObject, description: newItemDescription._id };
     }
-    if (price) {
+    if (item.price) {
         const newItemPrices = await Promise.all(
-            price.map(async p => {
+            item.price.map(async p => {
                 const priceDoc = await model.Price.create({
                     weight: p.weight,
                     price: p.price,
