@@ -229,6 +229,11 @@ router.post('/:category/new-item', async (req, res) => {
                 error: 'Category not found',
             })
         }
+        if (category.subcategories.length > 0) {
+            return res.status(500).json({
+                error: 'Category has subcategories'
+            })
+        }
 
         const newItem = await createItem(body);
         category.contents.push(newItem._id);
@@ -300,6 +305,11 @@ router.post('/:category/:subcategory/new-item', async (req, res) => {
         if (!category) {
             return res.status(404).json({
                 error: 'Category not found',
+            })
+        }
+        if (category.contents.length > 0) {
+            return res.status(500).json({
+                error: 'Category has no subcategories',
             })
         }
 
