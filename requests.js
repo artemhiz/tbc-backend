@@ -25,7 +25,7 @@ router.get('/', async (req, res) => {
             return finalObject;
         })
     )
-    res.send(processedResult);
+    res.send(processedResult.filter(object => object !== null));
 })
 router.get('/admin', async (req, res) => {
     const everything = await model.Category.find();
