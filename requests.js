@@ -344,12 +344,7 @@ router.post('/:category/:subcategory/new-item', async (req, res) => {
 
 router.post('/update/bilingual-text', async (req, res) => {
     try {
-        const changes = {
-            itemId: res.body.itemId,
-            _id: req.body._id,
-            eng: req.body.eng,
-            tr: req.body.tr,
-        }
+        const changes = req.body;
         if (!changes) {
             res.status(404).json({
                 error: 'Request body not found',
