@@ -345,6 +345,7 @@ router.post('/:category/:subcategory/new-item', async (req, res) => {
 router.post('/update/bilingual-text', async (req, res) => {
     try {
         const changes = {
+            itemId: res.body.itemId,
             _id: req.body._id,
             eng: req.body.eng,
             tr: req.body.tr,
@@ -355,12 +356,22 @@ router.post('/update/bilingual-text', async (req, res) => {
             })
         }
 
-        const changedText =  await model.BilingualText.findByIdAndUpdate(changes._id, {
-            tr: changes.tr,
-            eng: changes.eng,
-        }, { new: true });
+        if (!changes._id && changes.itemId) {
+            const addedText = await model.BilingualText.create({
+                eng: changes.eng,
+                tr: changes.tr,
+            })
+            await model.Item.findByIdAndUpdate(itemId, { description: addedText._id });
 
-        res.status(200).json(changedText);
+            res.status(200).json(addedText);
+        } else {
+            const changedText =  await model.BilingualText.findByIdAndUpdate(changes._id, {
+                tr: changes.tr,
+                eng: changes.eng,
+            }, { new: true });
+    
+            res.status(200).json(changedText);
+        }
     } catch (error) {
         res.status(500).json(error);
     }
@@ -430,6 +441,26 @@ router.post('/update/price', async (req, res) => {
             })
         )
         res.status(200).json(changedPrices);
+    } catch (error) {
+        res.status(500).json(error);
+    }
+})
+
+router.post('/add/description', async (req, res) => {
+    try {
+        const { _id, description } = req.body;
+        if (!_id) {
+            return res.status(500).json('ID of an item is not defined');
+        }
+        if (!description) {
+            return res.status(500).json('Description to add is not defined');
+        }
+        let foundItem = await model.Item.findById(_id);
+        if (!foundItem) {
+            return res.status(500).json('Item with given ID not found');
+        }
+
+
     } catch (error) {
         res.status(500).json(error);
     }
