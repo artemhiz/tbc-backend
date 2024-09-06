@@ -1,7 +1,7 @@
 const { Router } = require('express');
 const router = Router();
 const model = require('./menu/menu-model');
-const { findSpecialCondition, findTitle, findSubcategories, createItem, findContents } = require('./driver');
+const { findSpecialCondition, findTitle, findSubcategories, createItem, findContents, findContentsForAdmin, findSubcategoriesForAdmin } = require('./driver');
 
 router.get('/', async (req, res) => {
     const everything = await model.Category.find();
@@ -20,6 +20,30 @@ router.get('/', async (req, res) => {
                 finalObject = { ...finalObject, contents }
             } else if (category.subcategories.length > 0) {
                 const subcategories = await findSubcategories(category.subcategories);
+                finalObject = { ...finalObject, subcategories }
+            }
+            return finalObject;
+        })
+    )
+    res.send(processedResult);
+})
+router.get('/admin', async (req, res) => {
+    const everything = await model.Category.find();
+    const processedResult = await Promise.all(
+        everything.map(async category => {
+            let title = await findTitle(category.title);
+            let finalObject = { _id: category._id, title, color: category.color };
+
+            if (category.special_condition) {
+                const special_condition = await findSpecialCondition(category.special_condition);
+                finalObject = { ...finalObject, special_condition };
+            }
+
+            if (category.contents.length > 0) {
+                const contents = await findContentsForAdmin(category.contents);
+                finalObject = { ...finalObject, contents }
+            } else if (category.subcategories.length > 0) {
+                const subcategories = await findSubcategoriesForAdmin(category.subcategories);
                 finalObject = { ...finalObject, subcategories }
             }
             return finalObject;
@@ -441,24 +465,82 @@ router.post('/update/price', async (req, res) => {
     }
 })
 
-router.post('/add/description', async (req, res) => {
+router.post('/stop-list', async (req, res) => {
     try {
-        const { _id, description } = req.body;
-        if (!_id) {
-            return res.status(500).json('ID of an item is not defined');
-        }
-        if (!description) {
-            return res.status(500).json('Description to add is not defined');
-        }
-        let foundItem = await model.Item.findById(_id);
-        if (!foundItem) {
-            return res.status(500).json('Item with given ID not found');
-        }
+        const { _id, stop_listed } = req.body;
+        const updatedItem = await model.Item.findByIdAndUpdate(_id, { stop_listed }, { new: true });
 
-
+        res.status(200).json({
+            message: 'Item updated successfully',
+            updatedItem,
+        })
     } catch (error) {
+        console.error(error);
         res.status(500).json(error);
     }
 })
+
+router.delete('/:category/delete-item', async (req, res) => {
+    try {
+        const foundCategoryTitle = await model.BilingualText.findOne({ eng: req.params.category.split('-').join(' ') });
+        if (!foundCategoryTitle) {
+            return res.status(404).json('Category name not found');
+        }
+        const foundCategory = await model.Category.findOne({ title: foundCategoryTitle._id });
+        if (!foundCategory) {
+            return res.status(404).json('Category not found');
+        } else if (foundCategory.subcategories.length > 0) {
+            return res.status(500).json('Subcategories are in this category, make a different request pointing the subcategory name');
+        }
+
+        const { _id } = req.body;
+        const foundItem = await model.Item.findById(_id);
+        if (!foundItem) {
+            return res.status(404).json('Item not found');
+        } else if (!foundCategory.contents.includes(_id)) {
+            return res.status(404).json('Item not found in this category');
+        }
+
+        let newCategoryArray = foundCategory.contents.filter(itemId => !itemId.equals(_id));
+        const updatedCategory = await model.Category.findByIdAndUpdate(foundCategory._id, { contents: newCategoryArray }, { new: true });
+
+        await model.BilingualText.findByIdAndDelete(foundItem.title);
+        await model.BilingualText.findByIdAndDelete(foundItem.description);
+        await Promise.all(
+            foundCategory.price.map(async p => {
+                await model.Price.findByIdAndDelete(p);
+            })
+        )
+        await model.Item.findByIdAndDelete(_id);
+
+        res.status(200).json({
+            message: 'Item deleted successfully',
+            updatedCategory
+        })
+    } catch (error) {
+        console.error({ error });
+        res.status(500).json(error);
+    }
+})
+
+// router.post('/add/description', async (req, res) => {
+//     try {
+//         const { _id, description } = req.body;
+//         if (!_id) {
+//             return res.status(500).json('ID of an item is not defined');
+//         }
+//         if (!description) {
+//             return res.status(500).json('Description to add is not defined');
+//         }
+//         let foundItem = await model.Item.findById(_id);
+//         if (!foundItem) {
+//             return res.status(500).json('Item with given ID not found');
+//         }
+
+
+//     } catch (error) {
+//         res.status(500).json(error);
+//     }
+// })
 
 module.exports = router;

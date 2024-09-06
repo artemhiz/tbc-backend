@@ -48,7 +48,7 @@ module.exports.findTitle = async (_id) => {
     return title;
 }
 
-module.exports.findSubcategories = async (ids) => {
+module.exports.findSubcategories = async ids => {
     const subcategories = await Promise.all(
         ids.map(async _id => {
             const subcategory = await model.Subcategory.findOne({ _id });
@@ -63,8 +63,42 @@ module.exports.findSubcategories = async (ids) => {
     )
     return subcategories;
 }
+module.exports.findSubcategoriesForAdmin = async ids => {
+    const subcategories = await Promise.all(
+        ids.map(async _id => {
+            const subcategory = await model.Subcategory.findOne({ _id });
+            const title = await model.BilingualText.findOne({ _id: subcategory.title });
+
+            return {
+                title: title,
+                contents: await this.findContentsForAdmin(subcategory.contents),
+            };
+            // return subcategory;
+        })
+    )
+    return subcategories;
+}
 
 module.exports.findContents = async (ids) => {
+    const contents = await Promise.all(
+        ids.map(async _id => {
+            const menuItem = await model.Item.findOne({ _id });
+
+            if (!menuItem.stop_listed) {
+                const title = await model.BilingualText.findOne({ _id: menuItem.title });
+                const description = await model.BilingualText.findOne({ _id: menuItem.description });
+                const price = await Promise.all(
+                    menuItem.price.map(async _id => {
+                        return await model.Price.findOne({ _id });
+                    })
+                )
+                return { _id, title, description, imgLink: menuItem.imgLink, price };
+            }
+        })
+    )
+    return contents;
+}
+module.exports.findContentsForAdmin = async (ids) => {
     const contents = await Promise.all(
         ids.map(async _id => {
             const menuItem = await model.Item.findOne({ _id });

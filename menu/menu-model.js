@@ -41,6 +41,11 @@ const menuItemSchema = new mongoose.Schema({
         type: [mongoose.Types.ObjectId],
         ref: 'Price',
     },
+    stop_listed: {
+        type: Boolean,
+        required: true,
+        default: false,
+    }
 })
 module.exports.Item = mongoose.model('Item', menuItemSchema);
 
