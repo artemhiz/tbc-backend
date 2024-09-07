@@ -59,7 +59,7 @@ router.post('/item', async (req, res) => {
 
         const itemTitle = await findTitle(foundItem.title);
 
-        let itemToSend = { title: itemTitle };
+        let itemToSend = { title: itemTitle, stop_listed: foundItem.stop_listed };
 
         if (foundItem.imgLink) {
             itemToSend = { ...itemToSend, imgLink: foundItem.imgLink }
