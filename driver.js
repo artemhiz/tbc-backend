@@ -96,7 +96,7 @@ module.exports.findContents = async (ids) => {
             }
         })
     )
-    return contents;
+    return contents.filter(item => item !== null);
 }
 module.exports.findContentsForAdmin = async (ids) => {
     const contents = await Promise.all(
@@ -110,7 +110,7 @@ module.exports.findContentsForAdmin = async (ids) => {
                     return await model.Price.findOne({ _id });
                 })
             )
-            return { _id, title, description, imgLink: menuItem.imgLink, price };
+            return { _id, title, description, stop_listed: menuItem.stop_listed, imgLink: menuItem.imgLink, price };
         })
     )
     return contents;
