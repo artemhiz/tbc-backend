@@ -166,7 +166,6 @@ router.get('/pricing', async (req, res) => {
 router.get('/:category', async (req, res) => {
     try {
         const title = await model.BilingualText.findOne({ eng: req.params.category.split('-').join(' ') });
-        console.log(title);
         if (!title) {
             return res.status(404).json({
                 error: 'Category name not found',
@@ -374,6 +373,7 @@ router.post('/update/bilingual-text', async (req, res) => {
                 error: 'Request body not found',
             })
         }
+        console.log(changes);
 
         if (!changes._id && changes.itemId) {
             const addedText = await model.BilingualText.create({
