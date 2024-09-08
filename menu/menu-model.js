@@ -7,7 +7,7 @@ const bilingualSchema = new mongoose.Schema({
     },
     tr: {
         type: String,
-        required: true,
+        required: false,
     },
 })
 module.exports.BilingualText = mongoose.model('BilingualText', bilingualSchema);
@@ -33,6 +33,7 @@ const menuItemSchema = new mongoose.Schema({
     description: {
         type: mongoose.Types.ObjectId,
         ref: 'BilingualText',
+        required: true,
     },
     imgLink: {
         type: String,

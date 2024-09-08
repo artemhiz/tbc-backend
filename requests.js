@@ -380,7 +380,7 @@ router.post('/update/bilingual-text', async (req, res) => {
                 eng: changes.eng,
                 tr: changes.tr,
             })
-            await model.Item.findByIdAndUpdate(itemId, { description: addedText._id });
+            await model.Item.findByIdAndUpdate(changes.itemId, { description: addedText._id });
 
             res.status(200).json(addedText);
         } else {
@@ -392,7 +392,7 @@ router.post('/update/bilingual-text', async (req, res) => {
             res.status(200).json(changedText);
         }
     } catch (error) {
-        res.status(500).json(error);
+        res.status(500).json({ error });
     }
 })
 

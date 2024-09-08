@@ -58,7 +58,6 @@ module.exports.findSubcategories = async ids => {
                 title: title,
                 contents: await this.findContents(subcategory.contents),
             };
-            // return subcategory;
         })
     )
     return subcategories;
