@@ -482,7 +482,11 @@ router.post('/stop-list', async (req, res) => {
 
 router.delete('/:category/delete-item', async (req, res) => {
     try {
-        const foundCategoryTitle = await model.BilingualText.findOne({ eng: req.params.category.split('-').join(' ') });
+        const { category } = req.params;
+        if (!category) {
+            return res.status(404).json('Category name is not defined');
+        }
+        const foundCategoryTitle = await model.BilingualText.findOne({ eng: category.split('-').join(' ') });
         if (!foundCategoryTitle) {
             return res.status(404).json('Category name not found');
         }
