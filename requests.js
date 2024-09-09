@@ -490,7 +490,7 @@ router.delete('/:category/delete-item', async (req, res) => {
         if (!foundCategory) {
             return res.status(404).json('Category not found');
         } else if (foundCategory.subcategories.length > 0) {
-            return res.status(500).json('Subcategories are in this category, make a different request pointing the subcategory name');
+            return res.status(500).json('There are subcategories in this category, make a different request pointing the subcategory name');
         }
 
         const { _id } = req.body;
@@ -501,25 +501,28 @@ router.delete('/:category/delete-item', async (req, res) => {
             return res.status(404).json('Item not found in this category');
         }
 
-        let newCategoryArray = foundCategory.contents.filter(itemId => !itemId.equals(_id));
+        let newCategoryArray = foundCategory.contents.filter(itemId => itemId !== _id);
         const updatedCategory = await model.Category.findByIdAndUpdate(foundCategory._id, { contents: newCategoryArray }, { new: true });
+        if (!updatedCategory) {
+            return res.status(500).json('Could not update category\'s contents')
+        } else {
+            await model.BilingualText.findByIdAndDelete(foundItem.title);
+            await model.BilingualText.findByIdAndDelete(foundItem.description);
+            await Promise.all(
+                foundCategory.price.map(async p => {
+                    await model.Price.findByIdAndDelete(p);
+                })
+            )
+            await model.Item.findByIdAndDelete(_id);
 
-        await model.BilingualText.findByIdAndDelete(foundItem.title);
-        await model.BilingualText.findByIdAndDelete(foundItem.description);
-        await Promise.all(
-            foundCategory.price.map(async p => {
-                await model.Price.findByIdAndDelete(p);
+            res.status(200).json({
+                message: 'Item deleted successfully',
+                updatedCategory
             })
-        )
-        await model.Item.findByIdAndDelete(_id);
-
-        res.status(200).json({
-            message: 'Item deleted successfully',
-            updatedCategory
-        })
+        }
     } catch (error) {
-        console.error({ error });
-        res.status(500).json(error);
+        console.error(error.message);
+        res.json(error.message);
     }
 })
 
